@@ -1744,6 +1744,7 @@ var Audio = {
         from_pad = !!opts.from_pad, update = opts.update, audioId = opts.audioId;
     if (__cur.loadingRecs) return;
     if (update) {
+      delete __cur.recsOrder;
       delete __cur.recsOffset;
       delete __cur.recommendIds;
       delete __cur.recommendAudios;
@@ -1853,7 +1854,6 @@ var Audio = {
         if (options.recsCount === 0) {
           __cur.noRecommendations = true;
           delete options.recsOffset;
-          delete __cur.recsOrder;
         }
         if (json) {
           json = eval('('+json+')');
@@ -1966,6 +1966,7 @@ var Audio = {
       __cur.popularAudios = [];
     }
     if (update) {
+      delete __cur.popularOrder;
       delete __cur.popularOffset;
       delete __cur.popularIds;
       delete __cur.popularAudios[genre];
@@ -2080,7 +2081,6 @@ var Audio = {
         if (options.popularCount === 0) {
           __cur.noPopular = true;
           delete options.popularOffset;
-          delete __cur.popularOrder;
         }
         if (json) {
           json = eval('('+json+')');
