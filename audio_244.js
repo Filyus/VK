@@ -1785,12 +1785,11 @@ var Audio = {
     }
     if (__cur.recommendIds === undefined) __cur.recommendIds = [];
     if (__cur.recommendAudios === undefined) __cur.recommendAudios = [];
-    if (__cur.recsCount === undefined) __cur.recsCount = 0;
+    if (__cur.recsOrder === undefined) __cur.recsOrder = 0;
     if (__cur.sPreload.innerHTML) {
       while (__cur.sPreload.firstChild) {
         var el = __cur.sPreload.firstChild;
         __cur.aContent.appendChild(el);
-        __cur.recsCount++;
       }
       if (from_pad && window.Pads && Pads.updateHeight) {
         Pads.updateHeight();
@@ -1798,10 +1797,9 @@ var Audio = {
     }
     if (__cur.preloadJSON) {
       json = __cur.preloadJSON['all'];
-      var cur_order = __cur.recsCount;
       for (var i in json) {
         var audio = json[i];
-        audio._order = cur_order++;
+        audio._order = __cur.recsOrder++;
         if (indexOf(__cur.recommendIds, audio[0]+"_"+audio[1]) == -1) {
           __cur.recommendIds.push(audio[0]+"_"+audio[1]);
           __cur.recommendAudios.push(audio);
@@ -1852,17 +1850,16 @@ var Audio = {
         if (from_pad) {
           Audio.updatePadFiltersHeight();
         }
-        if (options.recsCount === 0 && offset) {
+        if (options.recsCount === 0) {
           __cur.noRecommendations = true;
           delete options.recsOffset;
         }
         if (json) {
           json = eval('('+json+')');
           json = json['all'];
-          var cur_order = __cur.recsCount;
           for (var i in json) {
             var audio = json[i];
-            audio._order = cur_order++;
+            audio._order = __cur.recsOrder++;
             if (indexOf(__cur.recommendIds, audio[0]+"_"+audio[1]) == -1) {
               __cur.recommendIds.push(audio[0]+"_"+audio[1]);
               __cur.recommendAudios.push(audio);
@@ -1875,9 +1872,7 @@ var Audio = {
           }
         }
         removeClass(__cur.showMore, 'loading');
-        if (offset) {
-          delete options.recsCount;
-        }
+        delete options.recsCount;
         if (options) extend(__cur, options);
         if (!offset) {
           __cur.aContent.innerHTML = rows;
@@ -1898,7 +1893,7 @@ var Audio = {
           }
         }
 
-        if (__cur.recsCount && !query.audio_id) {
+        if (!__cur.noRecommendations && !query.audio_id) {
           show(__cur.showMore);
         } else {
           hide(__cur.showMore);
@@ -2023,12 +2018,11 @@ var Audio = {
     }
     if (__cur.popularIds === undefined) __cur.popularIds = [];
     if (__cur.popularAudios[genre] === undefined) __cur.popularAudios[genre] = [];
-    if (__cur.popularCount === undefined) __cur.popularCount = 0;
+    if (__cur.popularOrder === undefined) __cur.popularOrder = 0;
     if (__cur.sPreload.innerHTML) {
       while (__cur.sPreload.firstChild) {
         var el = __cur.sPreload.firstChild;
         __cur.aContent.appendChild(el);
-        __cur.popularCount++;
       }
       if (from_pad && window.Pads && Pads.updateHeight) {
         Pads.updateHeight();
@@ -2036,10 +2030,9 @@ var Audio = {
     }
     if (__cur.preloadJSON) {
       json = __cur.preloadJSON['all'];
-      var cur_order = __cur.popularCount;
       for (var i in json) {
         var audio = json[i];
-        audio._order = cur_order++;
+        audio._order = __cur.popularOrder++;
         if (indexOf(__cur.popularIds, audio[0]+"_"+audio[1]) == -1) {
           __cur.popularIds.push(audio[0]+"_"+audio[1]);
           __cur.popularAudios[genre].push(audio);
@@ -2083,17 +2076,16 @@ var Audio = {
       onDone: function(rows, preload, json, preload_json, options, genres) {
         delete __cur.loadingPopular;
         if (__cur.lastAct != 'popular') return;
-        if (options.popularCount === 0 && offset) {
+        if (options.popularCount === 0) {
           __cur.noPopular = true;
           delete options.popularOffset;
         }
         if (json) {
           json = eval('('+json+')');
           json = json['all'];
-          var cur_order = __cur.popularCount;
           for (var i in json) {
             var audio = json[i];
-            audio._order = cur_order++;
+            audio._order = __cur.popularOrder++;
             if (indexOf(__cur.popularIds, audio[0]+"_"+audio[1]) == -1) {
               __cur.popularIds.push(audio[0]+"_"+audio[1]);
               __cur.popularAudios[genre].push(audio);
@@ -2103,9 +2095,7 @@ var Audio = {
           audioPlayer.genPlaylist(__cur.popularAudios[genre], needs_update);
         }
         removeClass(__cur.showMore, 'loading');
-        if (offset) {
-          delete options.popularCount;
-        }
+        delete options.popularCount;
         if (options) extend(__cur, options);
         if (!offset) {
           __cur.aContent.innerHTML = rows;
@@ -2131,7 +2121,7 @@ var Audio = {
           }
         }
 
-        if (__cur.popularCount) {
+        if (!__cur.noPopular) {
           show(__cur.showMore);
         } else {
           hide(__cur.showMore);
@@ -2401,23 +2391,33 @@ var Audio = {
     }
   },
 
-  hideRecommendation: function(aid, q, hash, event) {
+  hideRecommendation: function(aid, q, hash, event, from_pad) {
+		var __cur = from_pad ? window._pads && _pads.cur : window.cur;
     if (window.audioPlayer && currentAudioId() == aid) {
       audioPlayer.nextTrack(true);
     }
-    var recRow = ge('audio'+aid);
-    if (recRow) {
-      if (window.tooltips) {
-        tooltips.hide(ge('remove'+aid))
+    ajax.post(Audio.address, {act: 'hide_recommendation', q: q, hash: hash}, {
+      onDone: function() {
+        var recRow = ge('audio'+aid);
+        if (recRow) {
+          if (window.tooltips) {
+            tooltips.hide(ge('remove'+aid))
+          }
+          slideUp(recRow, 200, function() {
+            recRow.parentNode.removeChild(recRow);
+            Audio.removeFromPlaylist(aid);
+            Audio.changeHTitle();
+          });
+        }
+        if (aid && __cur.recommendIds) {
+          var index = indexOf(__cur.recommendIds, aid);
+          if (index != -1) {
+            __cur.recommendIds.splice(index, 1);
+            __cur.recommendAudios.splice(index, 1);
+          }
+        }
       }
-      slideUp(recRow, 200, function() {
-        recRow.parentNode.removeChild(recRow);
-        Audio.removeFromPlaylist(aid);
-        cur.recsCount--;
-        Audio.changeHTitle();
-      });
-    }
-    ajax.post(Audio.address, {act: 'hide_recommendation', q: q, hash: hash});
+    });
     if (event) cancelEvent(event);
     return false;
   },
