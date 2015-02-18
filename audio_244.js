@@ -1749,6 +1749,7 @@ var Audio = {
       delete __cur.recommendIds;
       delete __cur.recommendAudios;
       delete __cur.preloadJSON;
+      __cur.sPreload.innerHTML = '';
     }
     if (audioId) {
       __cur.recsAudioId = audioId;
@@ -1973,6 +1974,7 @@ var Audio = {
       delete __cur.popularIds;
       delete __cur.popularAudios[genre];
       delete __cur.preloadJSON;
+      __cur.sPreload.innerHTML = '';
       if (genre !== undefined) {
         __cur.genre = genre;
       }
