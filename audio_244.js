@@ -1797,15 +1797,6 @@ var Audio = {
       }
     }
     if (__cur.preloadJSON) {
-      json = __cur.preloadJSON['all'];
-      for (var i in json) {
-        var audio = json[i];
-        audio._order = __cur.recsOrder++;
-        if (indexOf(__cur.recommendIds, audio[0]+"_"+audio[1]) == -1) {
-          __cur.recommendIds.push(audio[0]+"_"+audio[1]);
-          __cur.recommendAudios.push(audio);
-        }
-      }
       var aid = currentAudioId(), needs_update = __cur.recsOffset && (aid && __cur.recommendIds && indexOf(__cur.recommendIds, aid) != -1);
       audioPlayer.genPlaylist(__cur.recommendAudios, needs_update);
     }
@@ -1883,6 +1874,17 @@ var Audio = {
         }
 
         __cur.preloadJSON = preload_json ? eval('('+preload_json+')') : false;
+        if (__cur.preloadJSON) {
+          var json = __cur.preloadJSON['all'];
+          for (var i in json) {
+            var audio = json[i];
+            audio._order = __cur.recsOrder++;
+            if (indexOf(__cur.recommendIds, audio[0]+"_"+audio[1]) == -1) {
+              __cur.recommendIds.push(audio[0]+"_"+audio[1]);
+              __cur.recommendAudios.push(audio);
+            }
+          }
+        }
         __cur.sPreload.innerHTML = '';
         var au = ce('div', {innerHTML: preload});
         while (au.firstChild) {
@@ -2031,15 +2033,6 @@ var Audio = {
       }
     }
     if (__cur.preloadJSON) {
-      json = __cur.preloadJSON['all'];
-      for (var i in json) {
-        var audio = json[i];
-        audio._order = __cur.popularOrder++;
-        if (indexOf(__cur.popularIds, audio[0]+"_"+audio[1]) == -1) {
-          __cur.popularIds.push(audio[0]+"_"+audio[1]);
-          __cur.popularAudios[genre].push(audio);
-        }
-      }
       var aid = currentAudioId(), needs_update = __cur.popularOffset && (aid && __cur.popularIds && indexOf(__cur.popularIds, aid) != -1);
       audioPlayer.genPlaylist(__cur.popularAudios[genre], needs_update);
     }
@@ -2107,10 +2100,17 @@ var Audio = {
           Audio.scrollToTop(from_pad);
         }
 
-        if (preload_json) {
-          __cur.preloadJSON = eval('('+preload_json+')');
-        } else {
-          __cur.preloadJSON = {};
+        __cur.preloadJSON = preload_json ? eval('('+preload_json+')') : false;
+        if (__cur.preloadJSON) {
+          var json = __cur.preloadJSON['all'];
+          for (var i in json) {
+            var audio = json[i];
+            audio._order = __cur.popularOrder++;
+            if (indexOf(__cur.popularIds, audio[0]+"_"+audio[1]) == -1) {
+              __cur.popularIds.push(audio[0]+"_"+audio[1]);
+              __cur.popularAudios[genre].push(audio);
+            }
+          }
         }
         __cur.sPreload.innerHTML = '';
         var au = ce('div', {innerHTML: preload});
