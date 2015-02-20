@@ -2396,32 +2396,35 @@ var Audio = {
   },
 
   hideRecommendation: function(aid, q, hash, event, from_pad) {
-		var __cur = from_pad ? window._pads && _pads.cur : window.cur;
+    var __cur = from_pad ? window._pads && _pads.cur : window.cur;
     if (window.audioPlayer && currentAudioId() == aid) {
       audioPlayer.nextTrack(true);
     }
-    ajax.post(Audio.address, {act: 'hide_recommendation', q: q, hash: hash}, {
-      onDone: function() {
-        var recRow = ge('audio'+aid);
-        if (recRow) {
-          if (window.tooltips) {
-            tooltips.hide(ge('remove'+aid))
-          }
-          slideUp(recRow, 200, function() {
+    var recRow = ge('audio'+aid);
+    if (recRow) {
+      if (window.tooltips) {
+        tooltips.hide(ge('remove'+aid))
+      }
+      slideUp(recRow, 200, function() {
+        ajax.post(Audio.address, {act: 'hide_recommendation', q: q, hash: hash}, {
+          onDone: function() {
             recRow.parentNode.removeChild(recRow);
+            if (aid && __cur.recommendIds) {
+              var index = indexOf(__cur.recommendIds, aid);
+              if (index != -1) {
+                __cur.recommendIds.splice(index, 1);
+                __cur.recommendAudios.splice(index, 1);
+              }
+            }
             Audio.removeFromPlaylist(aid);
             Audio.changeHTitle();
-          });
-        }
-        if (aid && __cur.recommendIds) {
-          var index = indexOf(__cur.recommendIds, aid);
-          if (index != -1) {
-            __cur.recommendIds.splice(index, 1);
-            __cur.recommendAudios.splice(index, 1);
+          },
+          onFail: function() {
+            slideDown(recRow, 200);
           }
-        }
-      }
-    });
+        });
+      });
+    }
     if (event) cancelEvent(event);
     return false;
   },
