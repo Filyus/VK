@@ -1868,8 +1868,8 @@ var Audio = {
           for (var i in json) {
             var audio = json[i];
             audio._order = __cur.recsOrder++;
-            if (indexOf(__cur.recommendIds, audio[0]+"_"+audio[1]) == -1) {
-              __cur.recommendIds.push(audio[0]+"_"+audio[1]);
+            if (indexOf(__cur.recommendIds, audio[0]+'_'+audio[1]) == -1) {
+              __cur.recommendIds.push(audio[0]+'_'+audio[1]);
               __cur.recommendAudios.push(audio);
             }
           }
@@ -1895,8 +1895,8 @@ var Audio = {
           for (var i in json) {
             var audio = json[i];
             audio._order = __cur.recsOrder++;
-            if (indexOf(__cur.recommendIds, audio[0]+"_"+audio[1]) == -1) {
-              __cur.recommendIds.push(audio[0]+"_"+audio[1]);
+            if (indexOf(__cur.recommendIds, audio[0]+'_'+audio[1]) == -1) {
+              __cur.recommendIds.push(audio[0]+'_'+audio[1]);
               __cur.recommendAudios.push(audio);
             }
           }
@@ -2102,8 +2102,8 @@ var Audio = {
           for (var i in json) {
             var audio = json[i];
             audio._order = __cur.popularOrder++;
-            if (indexOf(__cur.popularIds, audio[0]+"_"+audio[1]) == -1) {
-              __cur.popularIds.push(audio[0]+"_"+audio[1]);
+            if (indexOf(__cur.popularIds, audio[0]+'_'+audio[1]) == -1) {
+              __cur.popularIds.push(audio[0]+'_'+audio[1]);
               __cur.popularAudios[genre].push(audio);
             }
           }
@@ -2127,8 +2127,8 @@ var Audio = {
           for (var i in json) {
             var audio = json[i];
             audio._order = __cur.popularOrder++;
-            if (indexOf(__cur.popularIds, audio[0]+"_"+audio[1]) == -1) {
-              __cur.popularIds.push(audio[0]+"_"+audio[1]);
+            if (indexOf(__cur.popularIds, audio[0]+'_'+audio[1]) == -1) {
+              __cur.popularIds.push(audio[0]+'_'+audio[1]);
               __cur.popularAudios[genre].push(audio);
             }
           }
@@ -2421,8 +2421,8 @@ var Audio = {
 
     var el = ge('audio'+id),
         aid_info = id.split('_'),
-        aid = aid_info[1],
-        __cur = aid_info[2] && aid_info[2] == 'pad' ? window._pads : window.cur;
+        aid = aid_info[0]+'_'+aid_info[1],
+        __cur = aid_info[2] && aid_info[2] == 'pad' ? window._pads && _pads.cur : window.cur;
 
     if (el) {
       if (window.tooltips) {
@@ -2432,8 +2432,16 @@ var Audio = {
           performer  = clean(title_wrap && (geByTag1('a', title_wrap) || {}).innerHTML) || '',
           title      = clean(title_wrap && (geByClass1('lyrics_link', title_wrap) || geByClass1('title', title_wrap) || {}).innerHTML) || '';
 
-      if (!cur.deletedAudios) cur.deletedAudios = [];
-      cur.deletedAudios[aid] = el.innerHTML;
+      if (__cur.recommendIds) {
+        var index = indexOf(__cur.recommendIds, aid);
+        if (index != -1) {
+          if (!cur.deletedAudios) __cur.deletedAudios = [];
+          var code = el.innerHTML, info = __cur.recommendAudios[index];
+          cur.deletedAudios[aid] = {code: code, info: info};
+          __cur.recommendIds.splice(index, 1);
+          __cur.recommendAudios.splice(index, 1);
+        }
+      }
 
       var acts = geByClass1('actions', el);
       each(acts.children, function(){if (this.tt && this.tt.hide) this.tt.hide()});
@@ -2446,13 +2454,7 @@ var Audio = {
         delete_all: ''
       });
       el.setAttribute('nosorthandle', '1');
-      if (id && __cur.recommendIds) {
-        var index = indexOf(__cur.recommendIds, id);
-        if (index != -1) {
-          __cur.recommendIds.splice(index, 1);
-          __cur.recommendAudios.splice(index, 1);
-        }
-      }
+
       Audio.removeFromPlaylist(id);
       Audio.changeHTitle();
     }
@@ -2472,7 +2474,10 @@ var Audio = {
       return;
     }
     cur.restoring = true;
-    var el = ge('audio' + id), aid = id.split('_')[1];
+    var el = ge('audio' + id),
+        aid_info = id.split('_'),
+        aid = aid_info[0]+'_'+aid_info[1],
+        __cur = aid_info[2] && aid_info[2] == 'pad' ? window._pads && _pads.cur : window.cur;
     var acts = geByClass1('actions', el);
 
     each(acts.children, function(){if (this.tt && this.tt.hide) this.tt.hide()});
@@ -2481,8 +2486,19 @@ var Audio = {
       cur.restoring = false;
     }
     var onDone = function() {
-      el.innerHTML = cur.deletedAudios[aid];
-      el.removeAttribute('nosorthandle');
+      if (__cur.deletedAudios && __cur.deletedAudios[aid]) {
+        var deletedAudio = __cur.deletedAudios[aid];
+        el.innerHTML = deletedAudio.code;
+        el.removeAttribute('nosorthandle');
+        
+        if (__cur.recommendIds === undefined) __cur.recommendIds = [];
+        if (__cur.recommendAudios === undefined) __cur.recommendAudios = [];
+        if (indexOf(__cur.recommendIds, aid) == -1) {
+          __cur.recommendIds.push(aid);
+          __cur.recommendAudios.push(deletedAudio.info);
+        }
+        delete __cur.deletedAudios[aid];
+      }
 
       Audio.backToPlaylist(id);
       Audio.changeHTitle();
