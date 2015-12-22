@@ -1752,6 +1752,7 @@ var Audio = {
       delete __cur.recsAudioId;
       delete __cur.recsAlbumId;
       delete __cur.preloadJSON;
+      delete __cur.deletedRecommendations;
       __cur.sPreload.innerHTML = '';
     }
     if (audioId) {
@@ -2435,9 +2436,9 @@ var Audio = {
       if (__cur.recommendIds) {
         var index = indexOf(__cur.recommendIds, aid);
         if (index != -1) {
-          if (!cur.deletedAudios) __cur.deletedAudios = [];
+          if (!cur.deletedRecommendations) __cur.deletedRecommendations = [];
           var code = el.innerHTML, info = __cur.recommendAudios[index];
-          cur.deletedAudios[aid] = {code: code, info: info};
+          cur.deletedRecommendations[aid] = {code: code, info: info};
           __cur.recommendIds.splice(index, 1);
           __cur.recommendAudios.splice(index, 1);
         }
@@ -2486,18 +2487,19 @@ var Audio = {
       cur.restoring = false;
     }
     var onDone = function() {
-      if (__cur.deletedAudios && __cur.deletedAudios[aid]) {
-        var deletedAudio = __cur.deletedAudios[aid];
-        el.innerHTML = deletedAudio.code;
+      if (__cur.deletedRecommendations &&
+          __cur.deletedRecommendations[aid]) {
+        var deletedRecommendation = __cur.deletedRecommendations[aid];
+        el.innerHTML = deletedRecommendation.code;
         el.removeAttribute('nosorthandle');
         
         if (__cur.recommendIds === undefined) __cur.recommendIds = [];
         if (__cur.recommendAudios === undefined) __cur.recommendAudios = [];
         if (indexOf(__cur.recommendIds, aid) == -1) {
           __cur.recommendIds.push(aid);
-          __cur.recommendAudios.push(deletedAudio.info);
+          __cur.recommendAudios.push(deletedRecommendation.info);
         }
-        delete __cur.deletedAudios[aid];
+        delete __cur.deletedRecommendations[aid];
       }
 
       Audio.backToPlaylist(id);
