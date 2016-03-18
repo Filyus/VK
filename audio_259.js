@@ -2846,7 +2846,6 @@ var Audio = {
       return;
     }
     var claimText, claimTitle;
-    reason = 'geo';
     if (reason == 'crap') {
       claimText = getLang(claim_id >= 0 ? 'audio_crap_warning_text' : 'audio_crap_warning') || getLang(claim_id > 0 ? 'audio_claim_warning_objection' : (claim_id == 0 ? 'audio_claim_warning_text' : 'audio_claim_warning'));
       claimTitle = getLang('audio_crap_warning_title') || getLang('audio_claim_warning_title');
